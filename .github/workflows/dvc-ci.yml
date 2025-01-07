@@ -1,0 +1,62 @@
+name: DVC Pipeline
+on:
+  push:
+    branches:
+      - main 
+jobs:
+  dvc-setup-and-push:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Проверка кода
+        uses: actions/checkout@v2
+
+      - name: Установка python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.9'
+        
+
+      - name: Установка зависимостей
+        run: pip install -r requirements.txt
+
+      - name: Установка DVC
+        run: pip install dvc[all]
+
+      - name: Конфигурация удаленного DVC
+        run: |
+           dvc remote add -d myremote s3://datadvc/
+           
+      - name: Конфигурация удаленного DVC
+        run: |
+           dvc remote modify myremote access_key_id ${{ secrets.YANDEX_ACCESS_KEY_ID }}
+           dvc remote modify myremote secret_access_key ${{ secrets.YANDEX_SECRET_ACCESS_KEY }}
+           dvc remote modify myremote endpointurl https://storage.yandexcloud.net
+           
+      - name: Скачивание всех зависимостей
+        run: dvc pull 
+
+      - name: Запуск пайплайн
+        run: dvc repro  
+
+      - name: Отправка результатов
+        run: dvc push 
+
+      - name: Git add and commit DVC files
+        run: |
+          git config user.email "github-actions@example.com"
+          git config user.name "GitHub Actions"
+          git add .dvc dvc.lock
+    
+          if [[ $(git status --porcelain | grep -c "dvc.lock\|.dvc") -ne 0 ]]; then
+            git commit -m "Update DVC data"
+          else
+            echo "No changes to commit"
+          fi
+
+      - name: Git push DVC Config
+        uses: ad-m/github-push-action@master
+        with:
+          github_token: ${{ secrets.ACTIONS_PAT }}
+          branch: ${{ github.ref }}
+          

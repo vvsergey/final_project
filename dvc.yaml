@@ -1,0 +1,12 @@
+stages:
+  download:
+    cmd: python scripts/download_data.py
+    outs:
+      - data/iris_dataset.csv
+  process:
+    cmd: python scripts/conditioning.py
+    deps:
+      - data/iris_dataset.csv
+      - scripts/conditioning.py
+    outs:
+      - data/iris_dataset_cleaned.csv

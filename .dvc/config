@@ -1,0 +1,6 @@
+[core]
+    autostage = true
+    remote = datadvc
+['remote "datadvc"']
+    url = s3://datadvc/
+    endpointurl = https://storage.yandexcloud.net
